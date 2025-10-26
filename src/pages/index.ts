@@ -1,4 +1,4 @@
 export * as camera from './camera'
+export * as notFound from './not-found'
 
 export { Page } from './page'
-export { NotFoundPage } from './not-found'

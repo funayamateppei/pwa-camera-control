@@ -28,4 +28,13 @@ export const Routing = {
       // })(path),
     }
   })(),
+
+  NotFound: (() => {
+    const relative = 'not-found'
+    const path = `/${relative}`
+    return {
+      relative,
+      path,
+    }
+  })(),
 }

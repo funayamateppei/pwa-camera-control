@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import * as pages from '../pages'
 import { Routing } from './routing'
@@ -6,13 +6,18 @@ import { Routing } from './routing'
 const router = createBrowserRouter([
   {
     path: '/',
-    errorElement: <pages.NotFoundPage />,
+    errorElement: <Navigate to={Routing.NotFound.path} />,
     element: <pages.Page />,
   },
 
   {
     path: Routing.Camera.path,
     element: <pages.camera.Page />,
+  },
+
+  {
+    path: Routing.NotFound.path,
+    element: <pages.notFound.Page />,
   },
 ])
 
