@@ -1,3 +1,5 @@
+import { InitPage } from '@/features'
+
 export const Page = () => {
-  return <div>init page</div>
+  return <InitPage />
 }

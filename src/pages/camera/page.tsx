@@ -1,3 +1,5 @@
+import { CameraPage } from '@/features'
+
 export const Page = () => {
-  return <div>camera page</div>
+  return <CameraPage />
 }
