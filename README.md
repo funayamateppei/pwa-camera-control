@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# PWA Camera Control
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+このリポジトリは、React・TypeScript・Viteを用いたPWA対応のカメラアプリです。
 
-Currently, two official plugins are available:
+## 概要
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- スマートフォンやPCのブラウザで動作するPWAカメラアプリです。
+- Reactによる快適なUIと、TypeScriptによる型安全な実装です。
+- Viteを利用して高速な開発・ビルドが可能です。
+- Tailwind CSSでスタイリッシュなデザインを実現しています。
 
-## React Compiler
+## 使い方
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. このリポジトリをクローンします。
+2. 依存パッケージをインストールします。
+   ```sh
+   npm install
+   ```
+3. 開発サーバーを起動します。
+   ```sh
+   npm run dev
+   ```
+4. ブラウザで `http://localhost:5173` を開き、カメラ機能を利用してください。
 
-## Expanding the ESLint configuration
+## 主なコマンド
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| コマンド          | 説明                       |
+| ----------------- | -------------------------- |
+| `npm run dev`     | 開発サーバーの起動         |
+| `npm run build`   | 本番ビルド                 |
+| `npm run preview` | ビルド後のプレビュー       |
+| `npm run lint`    | ESLintによるコードチェック |
+| `npm run format`  | Prettierによるコード整形   |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 技術スタック
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- React 19
+- TypeScript
+- Vite（rolldown-vite）
+- Tailwind CSS
+- React Router v7
+- PWA対応
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 注意事項
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- PWAとしてインストールすることで、スマートフォンのホーム画面からも起動できます。
+- カメラ機能を利用する際は、ブラウザのカメラ権限を許可してください。
