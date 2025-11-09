@@ -1,5 +1,8 @@
+import { useNavigate } from 'react-router-dom'
 import { CameraPage } from '@/features'
 
 export const Page = () => {
-  return <CameraPage />
+  const navigate = useNavigate()
+
+  return <CameraPage navigateHome={() => navigate('/')} />
 }
