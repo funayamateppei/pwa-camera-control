@@ -9,6 +9,10 @@ export type UseCameraReturn = {
   isTorchOn: boolean
   toggleTorch: () => void
   hasTorch: boolean
+  zoom: number
+  setZoom: (value: number) => void
+  hasZoom: boolean
+  zoomRange: { min: number; max: number }
 }
 
 export const useCamera = (): UseCameraReturn => {
@@ -20,6 +24,9 @@ export const useCamera = (): UseCameraReturn => {
   const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined)
   const [isTorchOn, setIsTorchOn] = useState(false)
   const [hasTorch, setHasTorch] = useState(false)
+  const [zoom, setZoomState] = useState(0)
+  const [hasZoom, setHasZoom] = useState(false)
+  const [zoomRange, setZoomRange] = useState({ min: 0, max: 1 })
 
   // カメラデバイスのリストを取得
   const updateDeviceList = useCallback(async () => {
@@ -94,13 +101,30 @@ export const useCamera = (): UseCameraReturn => {
         streamRef.current = stream
         setIsCameraActive(true)
 
-        // トーチ（ライト）のサポートをチェック
+        // トーチ（ライト）とズームのサポートをチェック
         const track = stream.getVideoTracks()[0]
         const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
           torch?: boolean
+          zoom?: {
+            min: number
+            max: number
+          }
         }
+
+        // トーチのサポート
         setHasTorch(!!capabilities.torch)
         setIsTorchOn(false)
+
+        // ズームのサポート
+        if (capabilities.zoom) {
+          setHasZoom(true)
+          setZoomRange({ min: capabilities.zoom.min, max: capabilities.zoom.max })
+          setZoomState(capabilities.zoom.min)
+        } else {
+          setHasZoom(false)
+          setZoomRange({ min: 0, max: 1 })
+          setZoomState(0)
+        }
       }
     } catch (err) {
       console.error('カメラの起動に失敗しました:', err)
@@ -171,6 +195,29 @@ export const useCamera = (): UseCameraReturn => {
     }
   }, [hasTorch, isTorchOn])
 
+  // ズームを設定する関数（0-1の範囲で受け取り、実際の範囲に変換）
+  const setZoom = useCallback(
+    async (normalizedValue: number) => {
+      if (!streamRef.current || !hasZoom) return
+
+      try {
+        const track = streamRef.current.getVideoTracks()[0]
+
+        // 0-1の範囲を実際のズーム範囲に変換
+        const actualZoom = zoomRange.min + normalizedValue * (zoomRange.max - zoomRange.min)
+
+        const constraints = {
+          advanced: [{ zoom: actualZoom } as MediaTrackConstraintSet],
+        }
+        await track.applyConstraints(constraints)
+        setZoomState(normalizedValue)
+      } catch (err) {
+        console.error('ズームの変更に失敗しました:', err)
+      }
+    },
+    [hasZoom, zoomRange]
+  )
+
   // 初回マウント時にカメラを起動
   useEffect(() => {
     if (videoDevices.length > 0 && !currentDeviceId) {
@@ -199,5 +246,9 @@ export const useCamera = (): UseCameraReturn => {
     isTorchOn,
     toggleTorch,
     hasTorch,
+    zoom,
+    setZoom,
+    hasZoom,
+    zoomRange,
   }
 }
