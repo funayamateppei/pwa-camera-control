@@ -18,6 +18,11 @@ export const useCamera = (): UseCameraReturn => {
 
   // カメラデバイスのリストを取得
   const updateDeviceList = useCallback(async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      setError('お使いのブラウザはカメラ機能に対応していません。')
+      return
+    }
+
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
       const cameras = devices.filter((device) => device.kind === 'videoinput')
@@ -29,6 +34,11 @@ export const useCamera = (): UseCameraReturn => {
 
   // デバイスリストを取得し、デバイス変更を監視
   useEffect(() => {
+    if (!navigator.mediaDevices) {
+      setError('お使いのブラウザはカメラ機能に対応していません。')
+      return
+    }
+
     updateDeviceList()
 
     // デバイスの接続/切断を監視
