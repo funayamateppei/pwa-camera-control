@@ -6,6 +6,9 @@ export type UseCameraReturn = {
   error: string
   toggleCamera: () => void
   hasMultipleCameras: boolean
+  isTorchOn: boolean
+  toggleTorch: () => void
+  hasTorch: boolean
 }
 
 export const useCamera = (): UseCameraReturn => {
@@ -15,6 +18,8 @@ export const useCamera = (): UseCameraReturn => {
   const [error, setError] = useState('')
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
   const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined)
+  const [isTorchOn, setIsTorchOn] = useState(false)
+  const [hasTorch, setHasTorch] = useState(false)
 
   // カメラデバイスのリストを取得
   const updateDeviceList = useCallback(async () => {
@@ -88,6 +93,14 @@ export const useCamera = (): UseCameraReturn => {
         videoRef.current.srcObject = stream
         streamRef.current = stream
         setIsCameraActive(true)
+
+        // トーチ（ライト）のサポートをチェック
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
+          torch?: boolean
+        }
+        setHasTorch(!!capabilities.torch)
+        setIsTorchOn(false)
       }
     } catch (err) {
       console.error('カメラの起動に失敗しました:', err)
@@ -142,6 +155,22 @@ export const useCamera = (): UseCameraReturn => {
     }
   }, [videoDevices, currentDeviceId, startCamera])
 
+  // ライト（トーチ）を切り替える関数
+  const toggleTorch = useCallback(async () => {
+    if (!streamRef.current || !hasTorch) return
+
+    try {
+      const track = streamRef.current.getVideoTracks()[0]
+      const constraints = {
+        advanced: [{ torch: !isTorchOn } as MediaTrackConstraintSet],
+      }
+      await track.applyConstraints(constraints)
+      setIsTorchOn(!isTorchOn)
+    } catch (err) {
+      console.error('ライトの切り替えに失敗しました:', err)
+    }
+  }, [hasTorch, isTorchOn])
+
   // 初回マウント時にカメラを起動
   useEffect(() => {
     if (videoDevices.length > 0 && !currentDeviceId) {
@@ -167,5 +196,8 @@ export const useCamera = (): UseCameraReturn => {
     error,
     toggleCamera,
     hasMultipleCameras: videoDevices.length > 1,
+    isTorchOn,
+    toggleTorch,
+    hasTorch,
   }
 }
