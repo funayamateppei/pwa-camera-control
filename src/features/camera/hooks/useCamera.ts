@@ -1,93 +1,161 @@
-import { useEffect, useRef, useState } from 'react'
-
-export type UseCameraOptions = {
-  facingMode?: 'user' | 'environment'
-}
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type UseCameraReturn = {
   videoRef: React.RefObject<HTMLVideoElement | null>
   isCameraActive: boolean
   error: string
+  toggleCamera: () => void
+  hasMultipleCameras: boolean
 }
 
-export const useCamera = (options: UseCameraOptions = {}): UseCameraReturn => {
-  const { facingMode = 'environment' } = options
+export const useCamera = (): UseCameraReturn => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [error, setError] = useState('')
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>(undefined)
 
-  // マウント時にカメラを起動し、アンマウント時に停止
+  // カメラデバイスのリストを取得
+  const updateDeviceList = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const cameras = devices.filter((device) => device.kind === 'videoinput')
+      setVideoDevices(cameras)
+    } catch (err) {
+      console.error('デバイスの取得に失敗しました:', err)
+    }
+  }, [])
+
+  // デバイスリストを取得し、デバイス変更を監視
   useEffect(() => {
-    const startCamera = async () => {
-      try {
-        setError('')
+    updateDeviceList()
 
-        // カメラへのアクセスを要求
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-          audio: false,
-        })
-
-        // videoエレメントにストリームを設定
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          streamRef.current = stream
-          setIsCameraActive(true)
-        }
-      } catch (err) {
-        console.error('カメラの起動に失敗しました:', err)
-
-        if (err instanceof Error) {
-          if (err.name === 'NotAllowedError') {
-            setError('カメラへのアクセスが拒否されました。ブラウザの設定を確認してください。')
-          } else if (err.name === 'NotFoundError') {
-            setError('カメラが見つかりませんでした。')
-          } else if (err.name === 'NotReadableError') {
-            setError('カメラは既に使用中です。')
-          } else {
-            setError('カメラの起動に失敗しました。')
-          }
-        } else {
-          setError('カメラの起動に失敗しました。')
-        }
-
-        setIsCameraActive(false)
-      }
+    // デバイスの接続/切断を監視
+    const handleDeviceChange = () => {
+      updateDeviceList()
     }
 
-    const stopCamera = () => {
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
+
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
+    }
+  }, [updateDeviceList])
+
+  // カメラを起動する関数
+  const startCamera = useCallback(async (deviceId?: string) => {
+    try {
+      setError('')
+
+      // 既存のストリームを停止
       if (streamRef.current) {
-        // すべてのトラックを停止
         streamRef.current.getTracks().forEach((track) => {
           track.stop()
         })
+      }
 
-        // videoエレメントのストリームをクリア
-        if (videoRef.current) {
-          videoRef.current.srcObject = null
+      // カメラへのアクセスを要求
+      const constraints: MediaStreamConstraints = {
+        video: deviceId
+          ? {
+              deviceId: { exact: deviceId },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            }
+          : {
+              facingMode: 'environment',
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+        audio: false,
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+
+      // videoエレメントにストリームを設定
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsCameraActive(true)
+      }
+    } catch (err) {
+      console.error('カメラの起動に失敗しました:', err)
+
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          setError('カメラへのアクセスが拒否されました。ブラウザの設定を確認してください。')
+        } else if (err.name === 'NotFoundError') {
+          setError('カメラが見つかりませんでした。')
+        } else if (err.name === 'NotReadableError') {
+          setError('カメラは既に使用中です。')
+        } else {
+          setError('カメラの起動に失敗しました。')
         }
+      } else {
+        setError('カメラの起動に失敗しました。')
+      }
 
-        streamRef.current = null
-        setIsCameraActive(false)
-        setError('')
+      setIsCameraActive(false)
+    }
+  }, [])
+
+  // カメラを停止する関数
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop()
+      })
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+
+      streamRef.current = null
+      setIsCameraActive(false)
+      setError('')
+    }
+  }, [])
+
+  // カメラを切り替える関数
+  const toggleCamera = useCallback(() => {
+    if (videoDevices.length <= 1) return
+
+    // 現在のデバイスのインデックスを取得
+    const currentIndex = videoDevices.findIndex((device) => device.deviceId === currentDeviceId)
+    const nextIndex = (currentIndex + 1) % videoDevices.length
+    const nextDevice = videoDevices[nextIndex]
+
+    if (nextDevice) {
+      setCurrentDeviceId(nextDevice.deviceId)
+      startCamera(nextDevice.deviceId)
+    }
+  }, [videoDevices, currentDeviceId, startCamera])
+
+  // 初回マウント時にカメラを起動
+  useEffect(() => {
+    if (videoDevices.length > 0 && !currentDeviceId) {
+      // 初回起動時は最初のデバイスを使用
+      const initialDevice = videoDevices[0]
+      if (initialDevice) {
+        setCurrentDeviceId(initialDevice.deviceId)
+        startCamera(initialDevice.deviceId)
       }
     }
+  }, [videoDevices, currentDeviceId, startCamera])
 
-    startCamera()
-
+  // アンマウント時にカメラを停止
+  useEffect(() => {
     return () => {
       stopCamera()
     }
-  }, [facingMode])
+  }, [stopCamera])
 
   return {
     videoRef,
     isCameraActive,
     error,
+    toggleCamera,
+    hasMultipleCameras: videoDevices.length > 1,
   }
 }
