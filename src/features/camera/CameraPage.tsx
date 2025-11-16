@@ -43,16 +43,16 @@ export const CameraPage = ({ navigateHome }: Props) => {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4">
+      <main className="flex-1 flex flex-col">
         {/* カメラビュー */}
-        <div className="w-full max-w-2xl">
-          <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl aspect-4/3 sm:aspect-video">
+        <div className="w-full h-full">
+          <div className="relative bg-black h-full">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className={`w-full h-full object-contain ${isCameraActive ? 'block' : 'hidden'}`}
+              className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
             />
             {!isCameraActive && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -83,7 +83,7 @@ export const CameraPage = ({ navigateHome }: Props) => {
 
             {/* コントロールボタン */}
             {isCameraActive && (
-              <div className="absolute top-4 right-4 flex flex-col gap-3">
+              <div className="absolute top-4 right-4 flex flex-row gap-3">
                 {/* カメラ切り替えボタン */}
                 {hasMultipleCameras && (
                   <button
@@ -140,44 +140,16 @@ export const CameraPage = ({ navigateHome }: Props) => {
             {hasZoom && isCameraActive && (
               <div className="absolute bottom-4 left-4 right-4 px-2">
                 <div className="bg-gray-800/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <svg
-                      className="w-5 h-5 text-white shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-                      />
-                    </svg>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={zoom}
-                      onChange={(e) => setZoom(parseFloat(e.target.value))}
-                      className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                      aria-label="ズーム"
-                    />
-                    <svg
-                      className="w-6 h-6 text-white shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10h-3m0 0H7m3 0v3m0-3V7"
-                      />
-                    </svg>
-                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={zoom}
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    aria-label="ズーム"
+                  />
                 </div>
               </div>
             )}
