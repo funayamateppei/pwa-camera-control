@@ -7,7 +7,8 @@ import { AppRouterProvider } from './router'
 // Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { type: 'module' }).then(
+    const swPath = `${import.meta.env.BASE_URL}sw.js`
+    navigator.serviceWorker.register(swPath, { type: 'module' }).then(
       (registration) => {
         console.log('ServiceWorker registration successful:', registration.scope)
       },
